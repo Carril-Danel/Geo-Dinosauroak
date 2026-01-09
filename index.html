@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dinosaurios en España - PBDB</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <!-- MarkerCluster CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+  />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    #map {
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- MarkerCluster JS -->
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<script>
+  const map = L.map('map').setView([40.3, -3.7], 6);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  const markers = L.markerClusterGroup();
+
+  const url = "https://paleobiodb.org/data1.2/occs/list.json" +
+              "?base_name=Dinosauria" +
+              "&cc=ES" +
+              "&show=coords,taxon,phylo,ident,geo,time";
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      const registros = data.records;
+
+      registros.forEach(dino => {
+        if (dino.lat && dino.lng) {
+          const nombre =
+            dino.accepted_name ||
+            dino.taxon_name ||
+            dino.tna ||
+            "Nombre no disponible";
+
+          const edad = dino.eag || "nose bro";
+
+          const formacion = dino.fml || "Formación desconocida";
+
+          const marker = L.marker([dino.lat, dino.lng]);
+          marker.bindPopup(`
+            <b>${nombre}</b><br>
+            Edad: ${edad}<br>
+            Formación: ${formacion}
+          `);
+          markers.addLayer(marker);
+        }
+      });
+
+      map.addLayer(markers);
+    })
+    .catch(error => {
+      console.error("Error cargando datos de PBDB:", error);
+    });
+</script>
+
+</body>
+</html>
