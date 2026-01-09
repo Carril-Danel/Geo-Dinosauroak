@@ -1,92 +1,219 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <title>Dinosaurios en España - PBDB</title>
 
   <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <!-- MarkerCluster CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
-  />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
+    :root {
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --accent: #2563eb;
     }
-    #map {
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
       height: 100vh;
+    }
+
+    /* Panel lateral */
+    .panel {
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel h1 {
+      font-size: 20px;
+      margin: 0 0 8px 0;
+    }
+
+    .muted {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .controls select,
+    .controls button {
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: white;
+    }
+
+    .controls button {
+      margin-top: 8px;
+      cursor: pointer;
+    }
+
+    .controls button:hover {
+      background: #f3f4f6;
+    }
+
+    /* Estadísticas */
+    .stats {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .stat .n {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .stat .label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: auto;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Mapa */
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* MarkerCluster */
+    .marker-cluster div span {
+      color: #ffffff !important;
     }
   </style>
 </head>
+
 <body>
 
-<div id="map"></div>
+  <div class="app">
+    <!-- Panel lateral -->
+    <aside class="panel">
+      <h1>Dinosaurios en España</h1>
+      <div class="muted">
+        Registros paleontológicos obtenidos de la Paleobiology Database (PBDB).
+      </div>
 
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+      <div class="controls">
+        <select id="periodSelect">
+          <option value="">Todos los periodos</option>
+          <option value="Triassic">Triásico</option>
+          <option value="Jurassic">Jurásico</option>
+          <option value="Cretaceous">Cretácico</option>
+        </select>
 
-<!-- MarkerCluster JS -->
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+        <button id="reloadBtn">Actualizar mapa</button>
+      </div>
 
-<script>
-  const map = L.map('map').setView([40.3, -3.7], 6);
+      <div class="stats">
+        <div class="stat">
+          <div class="n" id="countAll">0</div>
+          <div class="label">Registros encontrados</div>
+        </div>
+        <div class="stat">
+          <div class="n" id="countWithCoords">0</div>
+          <div class="label">Con coordenadas</div>
+        </div>
+      </div>
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
-  }).addTo(map);
+      <div class="footer">
+        Haz zoom o pulsa sobre los puntos del mapa para explorar los registros.
+      </div>
+    </aside>
 
-  const markers = L.markerClusterGroup();
+    <!-- Mapa -->
+    <main id="map" role="application" aria-label="Mapa de hallazgos"></main>
+  </div>
 
-  const url = "https://paleobiodb.org/data1.2/occs/list.json" +
-              "?base_name=Dinosauria" +
-              "&cc=ES" +
-              "&show=coords,taxon,phylo,ident,geo,time";
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
-  fetch(url)
-    .then(response => response.json())
-    .then(data => {
-      const registros = data.records;
+  <script>
+    const map = L.map('map').setView([40.3, -3.7], 6);
 
-      registros.forEach(dino => {
-        if (dino.lat && dino.lng) {
-          const nombre =
-            dino.accepted_name ||
-            dino.taxon_name ||
-            dino.tna ||
-            "Nombre no disponible";
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-          const edad = dino.eag || "nose bro";
+    const markers = L.markerClusterGroup();
 
-          const formacion = dino.fml || "Formación desconocida";
+    const url = "https://paleobiodb.org/data1.2/occs/list.json" +
+      "?base_name=Dinosauria" +
+      "&cc=ES" +
+      "&show=coords,taxon,phylo,ident,geo,time";
 
-          const marker = L.marker([dino.lat, dino.lng]);
-          marker.bindPopup(`
-            <b>${nombre}</b><br>
-            Edad: ${edad}<br>
-            Formación: ${formacion}
-          `);
-          markers.addLayer(marker);
-        }
-      });
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        const registros = data.records;
 
-      map.addLayer(markers);
-    })
-    .catch(error => {
-      console.error("Error cargando datos de PBDB:", error);
-    });
-</script>
+        document.getElementById('countAll').innerText = registros.length;
+        document.getElementById('countWithCoords').innerText = registros.filter(r => r.lat && r.lng).length;
+
+        registros.forEach(dino => {
+          if (dino.lat && dino.lng) {
+            const nombre = dino.accepted_name || dino.taxon_name || dino.tna || "Izen ezezaguna";
+            const edad = dino.eag || "Ezezaguna";
+            const periodo = dino.oei || "Garai ezezaguna";
+
+            const marker = L.marker([dino.lat, dino.lng]);
+            marker.bindPopup(`
+          <b>${nombre}</b><br>
+          Urtea: ${dino.eag && dino.lag
+                ? ` ${Math.round(dino.eag)} eta ${Math.round(dino.lag)} milioi urte bitartean`
+                : '—'
+              }<br>
+          Formación: ${periodo}
+        `);
+            markers.addLayer(marker);
+          }
+        });
+
+        map.addLayer(markers);
+      })
+      .catch(error => console.error("Error cargando datos de PBDB:", error));
+  </script>
 
 </body>
+
 </html>
