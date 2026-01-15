@@ -20,9 +20,8 @@ Web aplikazio honek **Espainian aurkitutako dinosauroen erregistro paleontologik
 - Espainiako mapa interaktiboa (OpenStreetMap + Leaflet)
 - Dinosauroen aurkikuntza-puntuak markatzaileekin
 - Marker Cluster sistema, puntu asko batera agertzean
-- Alboko panelean estatistikak:
-  - Erregistro kopuru osoa
-  - Koordenatuak dituzten erregistroak
+- Alboko panela:
+  - Garaiaren arabera filtratu
 - Markatzaile bakoitzean informazio hau:
   - Dinosauroaren izena
   - Adina (milioi urtetan)
@@ -36,10 +35,10 @@ Web aplikazio honek **Espainian aurkitutako dinosauroen erregistro paleontologik
 ![Mapa interaktiboa](Argazkiak/Mapa.png)
 
 ### 📍 Markatzaile baten informazioa
-<!-- ![Popup informazioa](img/popup.png) -->
+![Popup informazioa](Argazkiak/punto.png)
 
 ### 📊 Alboko panela eta estatistikak
-<!-- ![Estatistikak](img/estatistikak.png) -->
+![Menua](Argazkiak/menua.jpg)
 
 ---
 
