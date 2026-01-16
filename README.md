@@ -1,4 +1,4 @@
-# 🦖 Dinosaurioak Espainian – Leaflet + PBDB
+# 🦖 Dinosauroak Espainian – Leaflet + PBDB
 
 Proiektu honen helburua **Geolokalizazioa** irakasgaian ikasitakoa praktikan jartzea izan da, **Leaflet** mapa-liburutegia erabiliz eta **kanpoko API** baten bidez lortutako datuak geolokalizatuz.
 
